@@ -1,34 +1,88 @@
-# Week 3 – Smart Building Operations Assistant (Scaffold)
+# Smart Building AI Assistant
 
-This directory starts the Week-3 project that will cover the remaining Nemetschek AI-Developer gaps:
+A full-stack reference implementation of an **AI co-pilot for facility managers**.  
+It combines Retrieval-Augmented Generation (RAG) over building manuals, real-time sensor analytics, and predictive-maintenance ML models behind a FastAPI backend and Streamlit UI.
 
-* MCP-enabled multi-tool agent (docs, SQL, sensor API, code-gen)
-* Lightweight fine-tuned GPT-3.5 reranker
-* Predictive maintenance with H2O MOJO
-* OAuth2 auth, observability, CI/CD to AWS
+---
 
-## Run locally (dev mode)
+## ✨  Features
+
+| Capability | Details |
+|------------|---------|
+| RAG over docs | Ingest PDFs & CSVs → chunk & embed (FAISS locally or **pgvector** in Postgres) → semantic search & answer generation |
+| Live sensor data | Pluggable MCP integration (mock data in `backend/services/mcp.py`) |
+| Predictive maintenance | Lightweight heuristic or H2O MOJO model in `backend/predictive/` |
+| Multi-tool agent | LangChain agent that can call: `vector_search`, `sensor_live_data`, `predict_failure`, `sql_query` |
+| Observability | Optional Prometheus & OpenTelemetry collectors (see `infrastructure/`) |
+| Docker-ready | One‐shot `docker compose up` for local demo; ECS/RDS guidance in docs |
+| Confidential-mode | Toggle **CONFIDENTIAL_MODE=true** to switch to local embeddings + local LLM, disable outbound calls |
+
+---
+
+## 🚀 Quick Start (local dev)
 ```bash
-export LOCAL_MODE=true   # enables CORS & docs
+# clone your fork / this repo
+cd smart-building-AI-assistant
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python backend/main.py        # Terminal 1
-streamlit run frontend/app.py # Terminal 2
-```
-Then open http://localhost:8501 and click "Ping backend".
 
-## Folder layout
-```text
-backend/   – FastAPI service (currently just /healthz)
-frontend/  – Streamlit UI scaffold
-tests/     – pytest suite (health endpoint only for now)
+# Start backend (FastAPI)
+export LOCAL_MODE=true             # enables Swagger & CORS
+python backend/main.py             # → http://localhost:8000/docs
+
+# In a second terminal – launch UI
+streamlit run frontend/app.py      # → http://localhost:8501
 ```
 
-## Next milestones
-1. Add RAG ingestion & query (reuse Week-2 code).
-2. Wire LangChain Agent + MCP tool calls.
-3. Integrate PGVector for scalable embeddings.
-4. Add MOJO predictor + fake sensor data.
-5. CI workflow & Docker compose.
+### Ingest a document
+```bash
+curl -F file=@data/pdf/M52.pdf http://localhost:8000/upload-document
+```
+Then ask a question in the Streamlit chat box.
 
-Stay tuned! ☕️ 
+---
+
+## 🔐 Confidential deployments
+Setting `CONFIDENTIAL_MODE=true` :
+1. uses `sentence-transformers/all-MiniLM-L6-v2` embeddings locally
+2. routes all LLM calls to a local model (Mistral-7B or similar)
+3. summarises chunks before agent prompts
+4. blocks non-SELECT SQL via the pre-push hook
+
+See `backend/llm_factory.py` for implementation guidance.
+
+---
+
+## 🗂️ Repo layout
+```
+backend/      FastAPI service & LangChain logic
+frontend/     Streamlit-based UI
+scripts/      CLI helpers (faiss→pgvector, create_dummy_docs, …)
+data/         Sample manuals & sensor CSVs (small)
+indexes/      Local FAISS store (ignored by .gitignore)
+```
+
+---
+
+## 📦 Docker / Compose
+```
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+This spins up:
+* api (FastAPI)
+* ui  (Streamlit)
+* postgres-vector (with pgvector extension)
+* prometheus + otel-collector
+
+---
+
+## 🛣️ Roadmap
+- [ ] Replace heuristic predictor with real MOJO & example dataset
+- [ ] Add OAuth2 (Auth0) and role-based access in UI
+- [ ] Streaming responses with Server-Sent Events
+- [ ] CI: pytest + ruff + docker build in GitHub Actions
+
+---
+
+## License
+MIT © 2025 Venu Madhav 

@@ -1,0 +1,44 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+venv/
+
+# Test & coverage artifacts
+.pytest_cache/
+.coverage
+
+# Operating system files
+.DS_Store
+
+# Environment / secret files
+.env
+
+# Build / distribution / logs
+build/
+dist/
+*.log
+
+# Runtime-generated vector indexes & large artifacts
+indexes/
+*.faiss
+*.pkl
+
+# Data ingested for RAG (keep code, ignore large binaries)
+data/**
+!data/README.md
+
+# Docker & Git metadata inside container
+*.tar
+
+# Node / frontend caches (if any)
+node_modules/
+
+# Ignore PDFs or CSVs added for ingestion
+*.pdf
+*.csv 
+
+llm-dev_credentials.csv
